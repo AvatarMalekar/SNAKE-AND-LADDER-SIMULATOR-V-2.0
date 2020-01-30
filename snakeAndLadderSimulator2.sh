@@ -1,4 +1,4 @@
-#!/bin/bash -x
+#!/bin/bash
 echo "-------------------------------------------WELLCOME TO SNAKE AND LADDER SIMULATOR---------------------------------------------"
 NO_PLAY=0;
 SNAKE=1;
@@ -7,6 +7,7 @@ WINNING_POSITION=100;
 PLAYER_START_POSITION=0;
 
 playerPosition=$PLAYER_START_POSITION
+numberOfTimeDiceTossed=0
 flag=0
 function rollDie(){
 	local die=$((RANDOM%6+1))
@@ -55,10 +56,21 @@ function winnerDecider(){
 	fi
 	echo $flagValue
 }
+
+function diceTossed(){
+	((numberOfTimeDiceTossed++))
+}
+
+function positionAfterEveryDieForPlayer(){
+	echo "Position is:"$1
+}
 while [ $flag -eq 0 ]
 do
 	playerPosition=$(checkNoPlaySnakeOrLadder $(rollDie) $playerPosition )
 	playerPosition=$(checkPositionBelowZero $playerPosition )
+	positionAfterEveryDieForPlayer $playerPosition
 	flag=$(winnerDecider $playerPosition )
+	diceTossed
 done
-echo $playerPosition
+echo "Final Position of Player:"$playerPosition
+echo "Number of times dice tossed:"$numberOfTimeDiceTossed
