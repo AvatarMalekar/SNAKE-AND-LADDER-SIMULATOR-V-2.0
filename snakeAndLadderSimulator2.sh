@@ -7,7 +7,7 @@ WINNING_POSITION=100;
 PLAYER_START_POSITION=0;
 
 playerPosition=$PLAYER_START_POSITION
-
+flag=0
 function rollDie(){
 	local die=$((RANDOM%6+1))
 	echo $die
@@ -26,20 +26,39 @@ function checkNoPlaySnakeOrLadder(){
 			playerTempPosition=$(($playerTempPosition+$1))
 			;;
 	esac
+	playerTempPosition=$(getExactWinningPosition $playerTempPosition $1 )
 	echo $playerTempPosition
 }
 
 function checkPositionBelowZero(){
-	if [ $1 -lt 0 ]
+	local position=$1
+	if [ $position -lt 0 ]
 	then
-		echo $(($1*0))
-	else
-		echo $1
+		position=0
 	fi
+	echo $position
 }
-
-while [ $playerPosition -le $WINNING_POSITION ]
+function getExactWinningPosition(){
+	local position=$1
+	if [ $position -gt $WINNING_POSITION ]
+   then
+      position=$(($position-$2))
+   fi
+	echo $position
+}
+function winnerDecider(){
+	if [ $1 -eq 100 ]
+	then
+		local flagValue=1
+	else
+		flagValue=0
+	fi
+	echo $flagValue
+}
+while [ $flag -eq 0 ]
 do
 	playerPosition=$(checkNoPlaySnakeOrLadder $(rollDie) $playerPosition )
 	playerPosition=$(checkPositionBelowZero $playerPosition )
+	flag=$(winnerDecider $playerPosition )
 done
+echo $playerPosition
