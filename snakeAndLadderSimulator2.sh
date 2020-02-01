@@ -14,43 +14,44 @@ PLAYER2=1
 declare -A playerDictionary
 playerDictionary[Player1]=$PLAYER_START_POSITION
 playerDictionary[Player2]=$PLAYER_START_POSITION
-numberOfTimeDiceTossedByPlayer1=0
-numberOfTimeDiceTossedByPlayer2=0
+numberOfTimeDiceTossed=0
+
+#THESE VARIABLES ARE USED FOR SWITCHING PLAYERS 
 i=1
 x=3
 
 #FUNCTIONS
 function rollDie(){
-	local die=$((RANDOM%6+1))
-	echo $die
+	echo $((RANDOM%6+1))
 }
 function diceTossed(){
-	if [ $1 -eq 1 ]
-	then
-		((numberOfTimeDiceTossedByPlayer1++))
-	else
-		((numberOfTimeDiceTossedByPlayer2++))
-	fi
+	((numberOfTimeDiceTossed++))
 }
 function checkNoPlaySnakeOrLadder(){
-	local playerTempPosition=$2
+	local playerCurrentPosition=$2
+	local dieValue=$1
 	case $((RANDOM%3)) in
 		$NO_PLAY)
-			playerTempPosition=$playerTempPosition
+			playerCurrentPosition=$playerCurrentPosition
 			;;
 		$SNAKE)
-			playerTempPosition=$(($playerTempPosition-$1))
+			playerCurrentPosition=$(($playerCurrentPosition-$dieValue))
 			;;
 		$LADDER)
-			playerTempPosition=$(($playerTempPosition+$1))
+			playerCurrentPosition=$(($playerCurrentPosition+$dieValue))
+			;;
+		*)
+			echo "Invalid Position"
 			;;
 	esac
-	playerTempPosition=$(getExactWinningPosition $playerTempPosition $1 )
-	playerTempPosition=$(checkPositionBelowZero $playerTempPosition )
-	echo $playerTempPosition
+	playerCurrentPosition=$(getExactWinningPosition $playerCurrentPosition $dieValue )
+	playerCurrentPosition=$(checkPositionBelowZero $playerCurrentPosition )
+	echo $playerCurrentPosition
 }
 function positionAfterEveryDieForPlayer(){
-   echo "position of "$2 "is" $1
+	local position=$1
+	local player=$2
+	echo "position of "$player "is" $position
 }
 function checkPositionBelowZero(){
 	local position=$1
@@ -62,16 +63,19 @@ function checkPositionBelowZero(){
 }
 function getExactWinningPosition(){
 	local position=$1
+	local dieValue=$2
 	if [ $position -gt $WINNING_POSITION ]
-   then
-      position=$(($position-$2))
-   fi
+	then
+		position=$(($position-$dieValue))
+	fi
 	echo $position
 }
 function getWinner(){
-	if [ $1 -eq $WINNING_POSITION ]
+	local position=$1
+	local player=$2
+	if [ $position -eq $WINNING_POSITION ]
 	then
-		echo " "$2 "is Winner..!!"
+		echo ""$player "is Winner..!!"
 	fi
 }
 
@@ -80,7 +84,9 @@ while [ ${playerDictionary[Player1]} -ne $WINNING_POSITION -a ${playerDictionary
 do
 	playerDictionary[Player"$i"]=$(checkNoPlaySnakeOrLadder $(rollDie) ${playerDictionary[Player"$i"]} )
 	positionAfterEveryDieForPlayer ${playerDictionary[Player"$i"]} $"PLayer-$i"
-	diceTossed $i
-	getWinner ${playerDictionary[Player"$i"]} $"PLayer-$i"
-	i=$(($x-$i))
+	diceTossed
+	getWinner ${playerDictionary[Player"$i"]} $"PLayer-$i" 
+	i=$(($x-$i)) #PLAYER SWITCHES HERE
 done
+
+echo "Total number of count of Dice tossed:-"$numberOfTimeDiceTossed
