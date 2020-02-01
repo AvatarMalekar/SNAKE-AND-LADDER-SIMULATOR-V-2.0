@@ -11,18 +11,26 @@ PLAYER1=0
 PLAYER2=1
 
 #VARIABLES
-player1Position=$PLAYER_START_POSITION
-player2Position=$PLAYER_START_POSITION
-playingTurn=$PLAYER1
+declare -A playerDictionary
+playerDictionary[Player1]=$PLAYER_START_POSITION
+playerDictionary[Player2]=$PLAYER_START_POSITION
 numberOfTimeDiceTossedByPlayer1=0
 numberOfTimeDiceTossedByPlayer2=0
-flagForPlayer1=0
-flagForPlayer2=0
+i=1
+x=3
 
 #FUNCTIONS
 function rollDie(){
 	local die=$((RANDOM%6+1))
 	echo $die
+}
+function diceTossed(){
+	if [ $1 -eq 1 ]
+	then
+		((numberOfTimeDiceTossedByPlayer1++))
+	else
+		((numberOfTimeDiceTossedByPlayer2++))
+	fi
 }
 function checkNoPlaySnakeOrLadder(){
 	local playerTempPosition=$2
@@ -38,7 +46,11 @@ function checkNoPlaySnakeOrLadder(){
 			;;
 	esac
 	playerTempPosition=$(getExactWinningPosition $playerTempPosition $1 )
+	playerTempPosition=$(checkPositionBelowZero $playerTempPosition )
 	echo $playerTempPosition
+}
+function positionAfterEveryDieForPlayer(){
+   echo "position of "$2 "is" $1
 }
 function checkPositionBelowZero(){
 	local position=$1
@@ -56,53 +68,19 @@ function getExactWinningPosition(){
    fi
 	echo $position
 }
-function winnerDecider(){
-	if [ $1 -eq 100 ]
-	then
-		local flagValue=1
-	else
-		flagValue=0
-	fi
-	echo $flagValue
-}
-
-function diceTossedByPlayer1(){
-	((numberOfTimeDiceTossedByPlayer1++))
-}
-function diceTossedByPlayer2(){
-	((numberOfTimeDiceTossedByPlayer2++))
-}
-
-function positionAfterEveryDieForPlayer(){
-	echo " " $2" is:"$1
-}
 function getWinner(){
-	if [ $1 -gt $2 ]
+	if [ $1 -eq $WINNING_POSITION ]
 	then
-		echo "Player-1 is Winner..!!"
-	else
-		echo "Player-2 is Winner..!!"
+		echo " "$2 "is Winner..!!"
 	fi
 }
 
 #MAIN
-while [ $flagForPlayer1 -eq 0 -a $flagForPlayer2 -eq 0 ]
+while [ ${playerDictionary[Player1]} -ne $WINNING_POSITION -a ${playerDictionary[Player2]} -ne $WINNING_POSITION ]
 do
-	if [ $playingTurn -eq  $PLAYER1 ]
-	then
-		player1Position=$(checkNoPlaySnakeOrLadder $(rollDie) $player1Position )
-		player1Position=$(checkPositionBelowZero $player1Position )
-		positionAfterEveryDieForPlayer $player1Position $"player1Position"
-		flagForPlayer1=$(winnerDecider $player1Position )
-		diceTossedByPlayer1
-		playingTurn=$PLAYER2
-	else
-		player2Position=$(checkNoPlaySnakeOrLadder $(rollDie) $player2Position )
-		player2Position=$(checkPositionBelowZero $player2Position )
-		positionAfterEveryDieForPlayer $player2Position $"player2Position"
-		flagForPlayer2=$(winnerDecider $player2Position )
-		diceTossedByPlayer2
-		playingTurn=$PLAYER1
-	fi
+	playerDictionary[Player"$i"]=$(checkNoPlaySnakeOrLadder $(rollDie) ${playerDictionary[Player"$i"]} )
+	positionAfterEveryDieForPlayer ${playerDictionary[Player"$i"]} $"PLayer-$i"
+	diceTossed $i
+	getWinner ${playerDictionary[Player"$i"]} $"PLayer-$i"
+	i=$(($x-$i))
 done
-getWinner $flagForPlayer1 $flagForPlayer2
